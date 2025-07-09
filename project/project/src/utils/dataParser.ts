@@ -1,5 +1,4 @@
 import Papa from 'papaparse';
-import * as XLSX from 'xlsx';
 import { DonorData, Donation, FileUploadResult } from '../types';
 import { formatDate, parseDate } from './dateUtils';
 import { generateId } from './helpers';
@@ -28,11 +27,8 @@ export class DataParser {
         case 'csv':
           rawData = await this.parseCSV(file);
           break;
-        case 'excel':
-          rawData = await this.parseExcel(file);
-          break;
         default:
-          throw new Error(`Unsupported file type: ${fileType}`);
+          throw new Error(`Unsupported file type: ${fileType}. Please use CSV format.`);
       }
 
       const processedData = this.processRawData(rawData);
@@ -56,9 +52,8 @@ export class DataParser {
     const extension = file.name.split('.').pop()?.toLowerCase();
     
     if (extension === 'csv') return 'csv';
-    if (extension === 'xlsx' || extension === 'xls') return 'excel';
     
-    throw new Error('Unsupported file format');
+    throw new Error('Unsupported file format. Please use CSV files.');
   }
 
   private static parseCSV(file: File): Promise<RawDataRow[]> {
@@ -74,26 +69,6 @@ export class DataParser {
         },
         error: (error) => reject(error)
       });
-    });
-  }
-
-  private static async parseExcel(file: File): Promise<RawDataRow[]> {
-    return new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        try {
-          const data = e.target?.result;
-          const workbook = XLSX.read(data, { type: 'binary' });
-          const firstSheet = workbook.SheetNames[0];
-          const worksheet = workbook.Sheets[firstSheet];
-          const jsonData = XLSX.utils.sheet_to_json(worksheet) as RawDataRow[];
-          resolve(jsonData);
-        } catch (error) {
-          reject(error);
-        }
-      };
-      reader.onerror = () => reject(new Error('Failed to read Excel file'));
-      reader.readAsBinaryString(file);
     });
   }
 

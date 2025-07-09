@@ -79,13 +79,13 @@ export const FileUpload: React.FC<FileUploadProps> = ({ onDataLoaded, isLoading 
             <p className="text-sm text-gray-500 mt-1">
               {uploadResult?.success 
                 ? 'New data will be merged with existing records'
-                : 'Drag & drop or click to select • CSV, Excel supported'
+                : 'Drag & drop or click to select • CSV format supported'
               }
             </p>
           </div>
           <input
             type="file"
-            accept=".csv,.xlsx,.xls"
+            accept=".csv"
             onChange={handleFileInput}
             className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
             disabled={isLoading}

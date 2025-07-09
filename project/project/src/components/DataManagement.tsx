@@ -1,4 +1,5 @@
 import React from 'react';
+import { saveAs } from 'file-saver';
 import { DataStorage } from '../utils/dataStorage';
 import { DonorData } from '../types';
 import { Database, Download, Trash2, Upload, Calendar } from 'lucide-react';
@@ -21,14 +22,24 @@ export const DataManagement: React.FC<DataManagementProps> = ({ donorData, onDat
   };
 
   const handleExportData = () => {
-    const dataStr = JSON.stringify(donorData, null, 2);
-    const dataBlob = new Blob([dataStr], { type: 'application/json' });
-    const url = URL.createObjectURL(dataBlob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = `donor-data-export-${formatDate(new Date(), 'yyyy-MM-dd')}.json`;
-    link.click();
-    URL.revokeObjectURL(url);
+    // Export as CSV for better compatibility
+    const csvHeader = 'First Name,Last Name,Email,Phone,Total Amount,Donation Count,Average Donation,First Donation,Last Donation,Frequency\n';
+    const csvData = donorData.map(donor => [
+      donor.firstName,
+      donor.lastName,
+      donor.email || '',
+      donor.phone || '',
+      donor.totalAmount,
+      donor.donationCount,
+      donor.averageDonation.toFixed(2),
+      formatDate(donor.firstDonation, 'yyyy-MM-dd'),
+      formatDate(donor.lastDonation, 'yyyy-MM-dd'),
+      donor.donationFrequency
+    ].join(',')).join('\n');
+    
+    const csvContent = csvHeader + csvData;
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    saveAs(blob, `donor-data-export-${formatDate(new Date(), 'yyyy-MM-dd')}.csv`);
   };
 
   return (

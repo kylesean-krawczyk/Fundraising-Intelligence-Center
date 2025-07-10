@@ -5,7 +5,6 @@ import { DonationChart } from './DonationChart';
 import { TopDonorsTable } from './TopDonorsTable';
 import { RetentionChart } from './RetentionChart';
 import { EnhancedForecastCard } from './EnhancedForecastCard';
-import { EnhancedDonorAnalytics } from '../utils/enhancedAnalytics';
 import { Users, DollarSign, TrendingUp, Gift } from 'lucide-react';
 import { formatCurrency, formatNumber } from '../utils/helpers';
 
@@ -21,8 +20,6 @@ export const Dashboard: React.FC<DashboardProps> = ({ analysis }) => {
     const loadEnhancedAnalysis = async () => {
       setLoading(true);
       try {
-        // This would typically use the actual donor data
-        // For now, we'll enhance the existing analysis
         const enhanced = {
           ...analysis,
           enhancedForecast: {

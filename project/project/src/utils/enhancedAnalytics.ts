@@ -1,12 +1,11 @@
 import { DonorData, AnalysisResult, EconomicIndicator, EnhancedForecastData } from '../types';
 import { DonorAnalytics } from './analytics';
-import { EconomicDataService } from '../services/economicDataService';
 
 export class EnhancedDonorAnalytics extends DonorAnalytics {
-  static async analyzeDataWithEconomicFactors(donors: DonorData[]): Promise<AnalysisResult & { enhancedForecast: EnhancedForecastData }> {
+  static async analyzeDataWithEconomicFactors(donors: DonorData[], economicIndicators?: EconomicIndicator[]): Promise<AnalysisResult & { enhancedForecast: EnhancedForecastData }> {
     const baseAnalysis = this.analyzeData(donors);
-    const economicIndicators = await EconomicDataService.getAllEconomicIndicators();
-    const enhancedForecast = await this.generateEnhancedForecast(baseAnalysis.monthlyTrends, economicIndicators);
+    const indicators = economicIndicators || this.getMockIndicators();
+    const enhancedForecast = this.generateEnhancedForecast(baseAnalysis.monthlyTrends, indicators);
 
     return {
       ...baseAnalysis,
@@ -14,11 +13,11 @@ export class EnhancedDonorAnalytics extends DonorAnalytics {
     };
   }
 
-  private static async generateEnhancedForecast(
+  private static generateEnhancedForecast(
     monthlyTrends: any[],
     economicIndicators: EconomicIndicator[]
-  ): Promise<EnhancedForecastData> {
-    const baseForecast = this.generateForecast(monthlyTrends);
+  ): EnhancedForecastData {
+    const baseForecast = super.generateForecast ? super.generateForecast(monthlyTrends) : this.getBaseForecast(monthlyTrends);
     
     // Calculate economic impact factors
     const economicFactors = this.calculateEconomicImpact(economicIndicators);
@@ -31,6 +30,67 @@ export class EnhancedDonorAnalytics extends DonorAnalytics {
       economicFactors,
       adjustedPredictions
     };
+  }
+
+  private static getBaseForecast(monthlyTrends: any[]): any {
+    if (monthlyTrends.length < 3) {
+      return {
+        nextMonth: { predictedAmount: 0, confidence: 0 },
+        nextQuarter: { predictedAmount: 0, confidence: 0 },
+        trendDirection: 'stable'
+      };
+    }
+
+    const amounts = monthlyTrends.map(trend => trend.amount);
+    const recentTrends = amounts.slice(-6);
+    const avgAmount = recentTrends.reduce((sum, amount) => sum + amount, 0) / recentTrends.length;
+    
+    return {
+      nextMonth: { predictedAmount: avgAmount, confidence: 0.7 },
+      nextQuarter: { predictedAmount: avgAmount * 3, confidence: 0.6 },
+      trendDirection: 'stable' as const
+    };
+  }
+
+  private static getMockIndicators(): EconomicIndicator[] {
+    return [
+      {
+        name: 'Consumer Confidence Index',
+        data: [],
+        impact: 'High correlation with discretionary giving',
+        recommendation: 'Monitor monthly CCI reports for campaign timing',
+        currentValue: 98.5,
+        trend: 'up',
+        correlation: 0.75
+      },
+      {
+        name: 'S&P 500 Performance',
+        data: [],
+        impact: 'Stock market gains often increase charitable giving',
+        recommendation: 'Track quarterly performance for major gift timing',
+        currentValue: 4350.2,
+        trend: 'up',
+        correlation: 0.68
+      },
+      {
+        name: 'Unemployment Rate',
+        data: [],
+        impact: 'Inverse relationship with donation frequency',
+        recommendation: 'Adjust fundraising strategies during economic downturns',
+        currentValue: 3.7,
+        trend: 'down',
+        correlation: -0.62
+      },
+      {
+        name: 'GDP Growth Rate',
+        data: [],
+        impact: 'Economic expansion correlates with increased giving',
+        recommendation: 'Capitalize on growth periods for capital campaigns',
+        currentValue: 2.4,
+        trend: 'stable',
+        correlation: 0.71
+      }
+    ];
   }
 
   private static calculateEconomicImpact(indicators: EconomicIndicator[]): EnhancedForecastData['economicFactors'] {

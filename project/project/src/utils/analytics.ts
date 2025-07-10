@@ -95,7 +95,7 @@ export class DonorAnalytics {
     };
   }
 
-  private static generateForecast(monthlyTrends: MonthlyTrend[]): ForecastData {
+  protected static generateForecast(monthlyTrends: MonthlyTrend[]): ForecastData {
     if (monthlyTrends.length < 3) {
       return {
         nextMonth: { predictedAmount: 0, confidence: 0 },
